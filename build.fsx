@@ -5,6 +5,10 @@ open System
 open Fake
 open Fake.XMLHelper
 
+// Artifacts
+let artifacts =
+    ["./src/CryptoQl.Api/CryptoQl.Api.fsproj"]
+
 // Helpers
 let getBuildNo () =
     match buildServer with
@@ -41,6 +45,38 @@ Target "Test" <| fun _ ->
 
 Target "RebuildAll" DoNothing
 
+Target "Publish" <| fun _ ->
+    let buildNo = getBuildNo ()
+    let artifactsDir = sprintf "./artifacts/%s/" buildNo
+
+    CreateDir artifactsDir
+    CleanDir artifactsDir
+
+    let makeArtifact proj =
+        let projectDir = FileHelper.directory proj
+        let publishFolderPath = projectDir + "/deploy/"
+        let projectName = FileHelper.fileNameWithoutExt proj
+
+        CreateDir publishFolderPath
+        CleanDir publishFolderPath
+
+        // XmlPoke proj "/Project/PropertyGroup/Version/text()" "0.0.2" // set version to project file
+
+        DotNetCli.Publish <| fun p ->
+            { p with
+                Project = proj
+                Configuration = "Release"
+                Output = "deploy"
+                AdditionalArgs = ["--no-restore"] }
+
+        !! (publishFolderPath + "**/*.*")
+         -- "*.zip"
+        |> Zip publishFolderPath (sprintf "%s/%s-%s.zip" artifactsDir projectName buildNo)
+
+        DeleteDir publishFolderPath
+
+    Seq.iter makeArtifact artifacts
+
 // Build order
 "Clean"
   ==> "Restore"
@@ -55,5 +91,8 @@ Target "RebuildAll" DoNothing
 
 "Restore"
   ==> "RebuildAll"
+
+"RebuildAll"
+  ==> "Publish"
 
 RunTargetOrDefault "RebuildAll"

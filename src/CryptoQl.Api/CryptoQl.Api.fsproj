@@ -33,6 +33,9 @@
     <Content Include="logsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Dockerfile">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <EmbeddedResource Include="**/*.resx" />
   </ItemGroup>
   <ItemGroup>
