@@ -4,3 +4,14 @@ framework: netstandard20
 
 nuget FAKE
 nuget FSharp.Core
+nuget Microsoft.AspNetCore.All
+nuget Microsoft.Extensions.Caching.Memory
+nuget Fable.JsonConverter
+nuget Giraffe
+nuget GraphQl
+nuget Serilog
+nuget Serilog.Sinks.Literate
+nuget Serilog.Settings.Configuration
+nuget Serilog.Extensions.Logging
+nuget Serilog.Enrichers.Thread
+nuget Serilog.Enrichers.Process

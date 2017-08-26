@@ -8,8 +8,8 @@ open Fake.XMLHelper
 // Helpers
 let getBuildNo () =
     match buildServer with
-    | TeamCity | Jenkins | CCNet -> buildVersion
-    | _ -> "0"
+    | LocalBuild -> "0"
+    | _ -> buildVersion
 
 // Targets
 Target "Clean" <| fun _ ->
