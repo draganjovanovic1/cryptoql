@@ -84,8 +84,13 @@ module Program =
     let storage: Storage.T =
         let readTicker = Storage.readTicker (TimeSpan.FromMinutes (0.5)) DataSources.loadTicker
         let readExchange = Storage.readExchange (TimeSpan.FromHours (1.)) DataSources.loadExchangeRates
+        let getBySymbol s =
+            match readTicker().TryGetValue (s) with
+            | true, t -> Some t
+            | _ -> None
 
         { readTicker = readTicker
+          getBySymbol = getBySymbol
           convertFromUsd = Storage.convertFromUsd readExchange }
 
     [<EntryPoint>]

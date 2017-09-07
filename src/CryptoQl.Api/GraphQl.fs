@@ -9,6 +9,7 @@ module GraphQl =
     open GraphQL.Execution
     open GraphQL.Http
     open GraphQL.Types
+    open GraphQlExtensions
     open Types
 
     [<CLIMutable>]
@@ -227,14 +228,40 @@ module GraphQl =
             |> fun x -> x.Values
             |> box
 
+        let getBySymbol (ctx: ResolveFieldContext<_>) =
+            let symbol = ctx.GetArgument<string>("symbol", "")
+
+            if String.IsNullOrWhiteSpace (symbol) then
+                ctx.Errors.Add (GraphQlExecutionError ("Symbol can't be empty", "symbol", "SYMBOL_NOT_PROVIDED"))
+                null
+            else
+                match storage.getBySymbol symbol with
+                | Some t ->
+                    box t
+                | None ->
+                    ctx.Errors.Add (GraphQlExecutionError ("Symbol not found", "symbol", "SYMBOL_NOT_FOUND"))
+                    null
+
         do
             x.Name <- "Query"
-            x.Description <- "Cryptocurrencies ticker"
+            x.Description <- "Cryptocurrencies info"
 
             x.Field<ListGraphType<TickerType>>(
                 name = "ticker",
-                description = "Ride details",
+                description = "Cryptocurrency ticker",
                 resolve = Func<ResolveFieldContext<_>, _>(getTicker)
+            ) |> ignore
+
+            x.Field<TickerType>(
+                name = "currency",
+                description = "Cryptocurrency details",
+                arguments = QueryArguments (
+                    QueryArgument<NonNullGraphType<StringGraphType>> (
+                        Name = "symbol",
+                        Description = "Cryptocurrency symbol"
+                    )
+                ),
+                resolve = Func<ResolveFieldContext<_>, _>(getBySymbol)
             ) |> ignore
 
     let executeQuery storage query =

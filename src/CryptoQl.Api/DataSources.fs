@@ -189,6 +189,7 @@ module Storage =
 
     type T =
         { readTicker: unit -> IDictionary<string, Ticker>
+          getBySymbol: string -> Ticker option
           convertFromUsd: Currency -> float -> float }
 
     let private cache =
