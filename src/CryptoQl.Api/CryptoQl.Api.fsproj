@@ -17,6 +17,7 @@
   <ItemGroup>
     <Compile Include="Configuration.fs" />
     <Compile Include="Util.fs" />
+    <Compile Include="GraphQlExtensions.fs" />
     <Compile Include="Json.fs" />
     <Compile Include="DataSources.fs" />
     <Compile Include="GraphQl.fs" />

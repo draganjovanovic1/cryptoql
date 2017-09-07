@@ -1,8 +1,6 @@
-version 5.90.1
-
 source https://api.nuget.org/v3/index.json
 
-framework: netstandard20
+framework: netstandard20, netcore20
 
 nuget FAKE
 nuget FSharp.Core

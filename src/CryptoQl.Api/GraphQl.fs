@@ -23,11 +23,7 @@ module GraphQl =
                         Variables = Dictionary<string, obj>() }
                 else x
 
-    type Executor =
-        { execute: Storage.T -> GraphQlQuery -> Async<obj> }
-
-    type StorageContext =
-        { storage: Storage.T }
+    type StorageContext = { storage: Storage.T }
 
     type AmountType () as x =
         inherit ObjectGraphType<float option> ()
@@ -251,6 +247,7 @@ module GraphQl =
                         o.Query <- query.Query
                         o.OperationName <- query.OperationName
                         o.Inputs <- Inputs (query.Variables)
+                        o.ExposeExceptions <- true
                         o.UserContext <- { storage = storage }
                     )
                 |> Async.AwaitTask

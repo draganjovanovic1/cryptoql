@@ -24,13 +24,13 @@ module Json =
 
     let serializerSettings =
         JsonSerializerSettings (
-            ContractResolver = CamelCasePropertyNamesContractResolver(),
+            ContractResolver = GraphQlExtensions.GraphQlCamelCasePropertyNamesContractResolver (),
             DateFormatHandling = DateFormatHandling.IsoDateFormat,
             DateTimeZoneHandling = DateTimeZoneHandling.Utc,
             NullValueHandling = NullValueHandling.Ignore,
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
             Formatting = Formatting.Indented,
-            Converters = [|Fable.JsonConverter (); DictionaryConverter ()|]
+            Converters = [|Fable.JsonConverter (); DictionaryConverter (); GraphQlExtensions.GraphQlExecutionErrorJsonConverter ()|]
         )
 
     let applyGlobalJsonSettings () =

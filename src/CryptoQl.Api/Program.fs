@@ -4,6 +4,7 @@ module Program =
 
     open System
     open System.Net
+    open System.Threading.Tasks
     open System.Collections.Generic
     open Microsoft.AspNetCore.Builder
     open Microsoft.AspNetCore.Hosting
@@ -30,22 +31,22 @@ module Program =
         setStatusCode (int HttpStatusCode.NotFound)
         >=> text "URL not found"
 
-    let handleGraphQl storage gql bindQuery : HttpHandler =
+    let handleGraphQl storage bindQuery : HttpHandler =
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
                 let! query = bindQuery ctx
-                let! result = gql.execute storage query
+                let! result = GraphQl.executeQuery storage query
                 return! json result next ctx
             }
 
     let getQueryFromUrl (ctx: HttpContext) =
-        task { return ctx.BindQueryString<GraphQlQuery> () }
+        Task.FromResult (ctx.BindQueryString<GraphQlQuery> ())
 
     let getQueryFromBody (ctx: HttpContext) =
         task { return! ctx.BindJson<GraphQlQuery> () }
 
-    let composeApp storage gql =
-        let handleGraphQl = handleGraphQl storage gql
+    let composeApp storage =
+        let handleGraphQl = handleGraphQl storage
         choose [
             GET >=> route "/graphql" >=> handleGraphQl getQueryFromUrl
             POST >=> route "/graphql" >=> handleGraphQl getQueryFromBody
@@ -55,8 +56,7 @@ module Program =
     type Startup () =
         member __.Configure (app: IApplicationBuilder)
                             (loggerFactory: ILoggerFactory)
-                            (storage: Storage.T)
-                            (gql: GraphQl.Executor) =
+                            (storage: Storage.T) =
 
             Json.applyGlobalJsonSettings ()
             loggerFactory.AddSerilog (Log.Logger) |> ignore
@@ -71,7 +71,7 @@ module Program =
             forwardOptions.ForwardedHeaders <- ForwardedHeaders.XForwardedFor ||| ForwardedHeaders.XForwardedProto
 
             app.UseForwardedHeaders(forwardOptions)
-                .UseGiraffe(composeApp storage gql)
+                .UseGiraffe(composeApp storage)
 
             app.UseGiraffeErrorHandler (unhandledError)
 
@@ -88,9 +88,6 @@ module Program =
         { readTicker = readTicker
           convertFromUsd = Storage.convertFromUsd readExchange }
 
-    let gql: GraphQl.Executor =
-        { execute = fun s q -> GraphQl.executeQuery s q |> Async.map box }
-
     [<EntryPoint>]
     let main _ =
 
@@ -104,8 +101,7 @@ module Program =
             .UseConfiguration(Configuration.root)
             .UseStartup<Startup>()
             .ConfigureServices(fun x ->
-                x.AddSingleton<Storage.T>(storage)
-                    .AddSingleton<GraphQl.Executor>(gql) |> ignore
+                x.AddSingleton<Storage.T>(storage) |> ignore
             )
             .Build()
             .Run()
