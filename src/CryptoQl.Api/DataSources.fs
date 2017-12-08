@@ -51,7 +51,6 @@ module Types =
 module DataSources =
     open System
     open System.Collections.Generic
-    open System.Collections.Concurrent
     open Serilog
     open Types
 
@@ -185,7 +184,6 @@ module Storage =
     open System.Collections.Generic
     open Microsoft.Extensions.Caching.Memory
     open Types
-    open Serilog
 
     type T =
         { readTicker: unit -> IDictionary<string, Ticker>

@@ -2,10 +2,8 @@ namespace CryptoQl.Api
 
 [<RequireQualifiedAccess>]
 module Configuration =
-
     open System.IO
     open Microsoft.Extensions.Configuration
-    open Microsoft.Extensions.Configuration.Json
 
     let root =
         ConfigurationBuilder()

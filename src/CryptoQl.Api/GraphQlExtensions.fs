@@ -1,7 +1,6 @@
 namespace CryptoQl.Api
 
 module GraphQlExtensions =
-
     open System
     open System.Linq
     open GraphQL

@@ -1,17 +1,14 @@
 namespace CryptoQl.Api
 
 module Json =
-
     open System.Collections.Generic
     open Newtonsoft.Json
-    open Newtonsoft.Json.Serialization
     open Newtonsoft.Json.Converters
-    open Newtonsoft.Json.Linq
 
     type DictionaryConverter () =
         inherit CustomCreationConverter<IDictionary<string, obj>> ()
 
-        override __.Create (objectType) =
+        override __.Create _ =
             new Dictionary<string, obj> () :> _
         override __.CanConvert (objectType) =
             objectType = typeof<obj> || base.CanConvert (objectType)
@@ -32,9 +29,6 @@ module Json =
             Formatting = Formatting.Indented,
             Converters = [|Fable.JsonConverter (); DictionaryConverter (); GraphQlExtensions.GraphQlExecutionErrorJsonConverter ()|]
         )
-
-    let applyGlobalJsonSettings () =
-        JsonConvert.DefaultSettings <- fun _ -> serializerSettings
 
     let serialize x = JsonConvert.SerializeObject (x, serializerSettings)
     let deserialize<'a> x = JsonConvert.DeserializeObject<'a> (x, serializerSettings)

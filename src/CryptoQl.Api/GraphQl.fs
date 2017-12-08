@@ -1,13 +1,9 @@
 namespace CryptoQl.Api
 
 module GraphQl =
-
     open System
     open System.Collections.Generic
     open GraphQL
-    open GraphQL.Validation
-    open GraphQL.Execution
-    open GraphQL.Http
     open GraphQL.Types
     open GraphQlExtensions
     open Types

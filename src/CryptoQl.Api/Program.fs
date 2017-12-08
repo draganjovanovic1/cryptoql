@@ -1,18 +1,14 @@
 namespace CryptoQl.Api
 
 module Program =
-
     open System
     open System.Net
-    open System.Threading.Tasks
-    open System.Collections.Generic
     open Microsoft.AspNetCore.Builder
     open Microsoft.AspNetCore.Hosting
     open Microsoft.AspNetCore.Http
     open Microsoft.Extensions.Logging
     open Microsoft.Extensions.DependencyInjection
     open Microsoft.AspNetCore.HttpOverrides
-    open Microsoft.AspNetCore.Cors
     open Serilog
     open Giraffe.HttpContextExtensions
     open Giraffe.HttpHandlers
@@ -21,7 +17,7 @@ module Program =
     open GraphQl
 
     let unhandledError ex _ =
-        Log.Error (ex, "An unhandled exception has occurred while executing the request.")
+        Log.Error (ex, "An unhandled exception has occurred while executing the request")
 
         clearResponse
         >=> setStatusCode (int HttpStatusCode.InternalServerError)
@@ -31,25 +27,19 @@ module Program =
         setStatusCode (int HttpStatusCode.NotFound)
         >=> text "URL not found"
 
-    let handleGraphQl storage bindQuery : HttpHandler =
+    let handleGraphQl storage : HttpHandler =
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
-                let! query = bindQuery ctx
+                let! query = ctx.BindModelAsync<GraphQlQuery> ()
                 let! result = GraphQl.executeQuery storage query
-                return! json result next ctx
+                return! customJson Json.serializerSettings result next ctx
             }
-
-    let getQueryFromUrl (ctx: HttpContext) =
-        Task.FromResult (ctx.BindQueryString<GraphQlQuery> ())
-
-    let getQueryFromBody (ctx: HttpContext) =
-        task { return! ctx.BindJson<GraphQlQuery> () }
 
     let composeApp storage =
         let handleGraphQl = handleGraphQl storage
         choose [
-            GET >=> route "/graphql" >=> handleGraphQl getQueryFromUrl
-            POST >=> route "/graphql" >=> handleGraphQl getQueryFromBody
+            GET >=> route "/graphql" >=> handleGraphQl
+            POST >=> route "/graphql" >=> handleGraphQl
             notFound
         ]
 
@@ -57,8 +47,6 @@ module Program =
         member __.Configure (app: IApplicationBuilder)
                             (loggerFactory: ILoggerFactory)
                             (storage: Storage.T) =
-
-            Json.applyGlobalJsonSettings ()
             loggerFactory.AddSerilog (Log.Logger) |> ignore
 
             app.UseCors (fun b ->
@@ -71,15 +59,11 @@ module Program =
             forwardOptions.ForwardedHeaders <- ForwardedHeaders.XForwardedFor ||| ForwardedHeaders.XForwardedProto
 
             app.UseForwardedHeaders(forwardOptions)
-                .UseGiraffe(composeApp storage)
-
-            app.UseGiraffeErrorHandler (unhandledError)
+                .UseGiraffeErrorHandler(unhandledError)
+                .UseGiraffe(composeApp storage) |> ignore
 
         member __.ConfigureServices (services: IServiceCollection) =
-            services
-                .AddCors()
-                .AddAuthentication()
-            |> ignore
+            services.AddCors() |> ignore
 
     let storage: Storage.T =
         let readTicker = Storage.readTicker (TimeSpan.FromMinutes (0.5)) DataSources.loadTicker
